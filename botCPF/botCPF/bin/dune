@@ -1,0 +1,4 @@
+(executable
+ (public_name botCPF)
+ (name main)
+ (libraries botCPF))

@@ -35,10 +35,10 @@ let valida_cpf cpf_raw =
       let d2 = ((!soma2 * 10) mod 11) mod 10 in
       if d1 = digito 9 && d2 = digito 10 then `Valido
       else `Invalido "Digitos verificadores incorretos"
-
+      
 let formata_cpf cpf =
   let d = apenas_digitos cpf in
-  if String.length d = 11 then  
+  if String.length d = 11 then
     Printf.sprintf "%s.%s.%s-%s"
       (String.sub d 0 3)
       (String.sub d 3 3)

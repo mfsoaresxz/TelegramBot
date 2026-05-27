@@ -58,3 +58,21 @@ let send_message chat_id text =
       api_url chat_id (Uri.pct_encode text) in
   Client.get (Uri.of_string uri_str) >>= fun (_, body) ->
   Cohttp_lwt.Body.drain_body body
+
+(* Processa a mensagem recebida *)
+let process_message msg =
+  try
+    let message = msg |> member "message" in
+    let chat_id = message |> member "chat" |> member "id" |> to_int in
+    let text = message |> member "text" |> to_string in
+    
+    (* Verifica o texto recebido e responde de acordo *)
+    let reply = 
+      if validate_cpf text then 
+        "✅ O CPF informado é VÁLIDO." 
+      else 
+        "❌ O CPF informado é INVÁLIDO." 
+    in
+    send_message chat_id reply
+  with 
+  | _ -> Lwt.return_unit (* Ignora erros como mensagens de áudio, stickers, etc. *)

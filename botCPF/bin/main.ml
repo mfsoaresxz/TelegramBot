@@ -43,3 +43,18 @@ let validate_cpf cpf_input =
     let d1 = calc_digit 10 in
     let d2 = calc_digit 11 in
     digits.(9) = d1 && digits.(10) = d2
+
+
+(* ========================================== *)
+(* 2. LÓGICA DO BOT NO TELEGRAM               *)
+(* ========================================== *)
+
+let token = "8619111069:AAG4X9IIhdzc67xAmGQJ3cYcTgwuj-5hUtM"
+let api_url = Printf.sprintf "t.me/TCamlBot" token
+
+(* Função para enviar mensagem de volta ao usuário *)
+let send_message chat_id text =
+  let uri_str = Printf.sprintf "%s/sendMessage?chat_id=%d&text=%s" 
+      api_url chat_id (Uri.pct_encode text) in
+  Client.get (Uri.of_string uri_str) >>= fun (_, body) ->
+  Cohttp_lwt.Body.drain_body body

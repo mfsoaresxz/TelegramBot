@@ -76,3 +76,26 @@ let process_message msg =
     send_message chat_id reply
   with 
   | _ -> Lwt.return_unit (* Ignora erros como mensagens de áudio, stickers, etc. *)
+
+(* Loop contínuo (Long Polling) para buscar novas mensagens *)
+let rec poll offset =
+  let uri_str = Printf.sprintf "%s/getUpdates?offset=%d&timeout=10" api_url offset in
+  Client.get (Uri.of_string uri_str) >>= fun (_, body) ->
+  Cohttp_lwt.Body.to_string body >>= fun body_str ->
+  
+  let json = Yojson.Basic.from_string body_str in
+  let results = json |> member "result" |> to_list in
+  
+  let next_offset = List.fold_left (fun acc msg ->
+    let update_id = msg |> member "update_id" |> to_int in
+    (* Usa Lwt.async para processar a mensagem sem travar o loop *)
+    Lwt.async (fun () -> process_message msg);
+    max acc (update_id + 1)
+  ) offset results in
+  
+  poll next_offset
+
+(* Ponto de entrada do programa *)
+let () =
+  print_endline "Bot iniciado e escutando mensagens...";
+  Lwt_main.run (poll 0)

@@ -1,19 +1,45 @@
 open Lwt
 open Cohttp
-open Cohttp\_lwt\_unix
+open Cohttp_lwt_unix
 open Yojson.Basic.Util
 
-(\* ========================================== \*)
-(\* 1. LÓGICA DE VALIDAÇÃO DE CPF              \*)
-(\* ========================================== \*)
+(* ========================================== *)
+(* 1. LÓGICA DE VALIDAÇÃO DE CPF              *)
+(* ========================================== *)
 
-let char\_to\_int c = int\_of\_char c - int\_of\_char '0'
+let char_to_int c = int_of_char c - int_of_char '0'
 
-(\* Verifica se todos os números são iguais (ex: 111.111.111-11 é inválido) \*)
-let all\_same s =
-&#x20; let first = s.\[0] in
-&#x20; let rec loop i =
-&#x20;   if i = String.length s then true
-&#x20;   else if s.\[i] <> first then false
-&#x20;   else loop (i + 1)
-&#x20; in loop 1
+(* Verifica se todos os números são iguais (ex: 111.111.111-11 é inválido) *)
+let all_same s =
+  let first = s.[0] in
+  let rec loop i =
+    if i = String.length s then true
+    else if s.[i] <> first then false
+    else loop (i + 1)
+  in loop 1
+
+let validate_cpf cpf_input =
+  (* Filtra apenas os números da string (ignora pontos e traços) *)
+  let clean = 
+    String.to_seq cpf_input 
+    |> Seq.filter (fun c -> c >= '0' && c <= '9') 
+    |> String.of_seq 
+  in
+  
+  if String.length clean <> 11 || all_same clean then false
+  else
+    let digits = Array.init 11 (fun i -> char_to_int clean.[i]) in
+    
+    (* Função auxiliar para calcular o dígito verificador *)
+    let calc_digit max_weight =
+      let rec loop i weight sum =
+        if weight < 2 then
+          let rem = sum mod 11 in
+          if rem < 2 then 0 else 11 - rem
+        else loop (i + 1) (weight - 1) (sum + digits.(i) * weight)
+      in loop 0 max_weight 0
+    in
+    
+    let d1 = calc_digit 10 in
+    let d2 = calc_digit 11 in
+    digits.(9) = d1 && digits.(10) = d2

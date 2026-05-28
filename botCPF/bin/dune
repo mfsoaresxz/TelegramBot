@@ -1,4 +1,3 @@
 (executable
- (public_name botCPF)
  (name main)
- (libraries botCPF))
+ (libraries cohttp-lwt-unix yojson lwt lwt.unix))
